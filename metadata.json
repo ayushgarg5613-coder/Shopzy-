@@ -1,0 +1,6 @@
+{
+  "name": "Shopzy - Social Commerce Marketplace",
+  "description": "Indian social-commerce marketplace with zero-commission wholesale pricing, reselling margin calculator, seller and admin portals, live order tracking, and a smart AI shopping assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
