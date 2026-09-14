@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { api, setAuthToken, getAuthToken } from '../services/api';
+import { api, setAuthToken, clearAuthToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -69,8 +69,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // Reset to demo customer
-    switchRole('customer');
+    clearAuthToken();
+    setUser(null);
   };
 
   return (

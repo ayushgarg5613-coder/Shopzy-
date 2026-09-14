@@ -11,6 +11,8 @@ import {
   ChevronDown,
   X,
   Share2,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -41,12 +43,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenProfile,
   activeView,
 }) => {
-  const { user, role, switchRole } = useAuth();
+  const { user, role, switchRole, login, logout } = useAuth();
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
 
   const [searchInput, setSearchInput] = useState('');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +61,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleClearSearch = () => {
     setSearchInput('');
     onSearch('');
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const identifier = loginIdentifier.trim();
+    if (!identifier) {
+      setLoginError('Enter your phone or email.');
+      return;
+    }
+
+    setIsSigningIn(true);
+    setLoginError('');
+    const success = await login(identifier);
+    setIsSigningIn(false);
+    if (success) {
+      setLoginIdentifier('');
+      setShowRoleDropdown(false);
+    } else {
+      setLoginError('Could not sign in. Please try again.');
+    }
   };
 
   return (
@@ -241,19 +266,40 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => setShowRoleDropdown(false)}
                   />
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 text-xs">
-                    <div className="px-3 py-2 border-b border-gray-100">
-                      <p className="font-bold text-gray-900">{user?.name}</p>
-                      <p className="text-[11px] text-gray-500">{user?.email}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
-                        Active Role: {role}
-                      </span>
-                    </div>
+                    {user ? (
+                      <div className="px-3 py-2 border-b border-gray-100">
+                        <p className="font-bold text-gray-900">{user.name}</p>
+                        <p className="text-[11px] text-gray-500">{user.email}</p>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+                          Active Role: {role}
+                        </span>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSignIn} className="px-3 py-3 border-b border-gray-100">
+                        <p className="font-bold text-gray-900 mb-2">Sign in to Shopzy</p>
+                        <input
+                          id="nav-sign-in-input"
+                          value={loginIdentifier}
+                          onChange={(e) => setLoginIdentifier(e.target.value)}
+                          placeholder="Phone or email"
+                          className="w-full px-2.5 py-2 border border-gray-200 rounded-lg focus:outline-hidden focus:border-rose-500"
+                          autoComplete="email"
+                        />
+                        {loginError && <p className="mt-1.5 text-[11px] text-red-600">{loginError}</p>}
+                        <button
+                          id="nav-sign-in-btn"
+                          type="submit"
+                          disabled={isSigningIn}
+                          className="mt-2 w-full px-3 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-60"
+                        >
+                          {isSigningIn ? 'Signing in...' : 'Sign in'}
+                        </button>
+                      </form>
+                    )}
 
-                    <div className="px-2 py-1.5 text-[11px] text-gray-400 uppercase font-bold tracking-wider">
-                      Switch Demo Role
-                    </div>
+                    {user && <div className="px-2 py-1.5 text-[11px] text-gray-400 uppercase font-bold tracking-wider">Switch Demo Role</div>}
 
-                    <button
+                    {user && <button
                       id="role-switch-customer"
                       onClick={() => {
                         switchRole('customer');
@@ -274,9 +320,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </div>
                       </div>
                       {role === 'customer' && <span className="text-rose-600 font-bold">✓</span>}
-                    </button>
+                    </button>}
 
-                    <button
+                    {user && <button
                       id="role-switch-seller"
                       onClick={() => {
                         switchRole('seller');
@@ -297,9 +343,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </div>
                       </div>
                       {role === 'seller' && <span className="text-rose-600 font-bold">✓</span>}
-                    </button>
+                    </button>}
 
-                    <button
+                    {user && <button
                       id="role-switch-admin"
                       onClick={() => {
                         switchRole('admin');
@@ -320,20 +366,41 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </div>
                       </div>
                       {role === 'admin' && <span className="text-rose-600 font-bold">✓</span>}
-                    </button>
+                    </button>}
 
                     <div className="border-t border-gray-100 my-1" />
 
-                    <button
-                      onClick={() => {
-                        setShowRoleDropdown(false);
-                        onOpenProfile();
-                      }}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 cursor-pointer"
-                    >
-                      <User className="w-3.5 h-3.5 text-gray-400" />
-                      <span>My Profile & Addresses</span>
-                    </button>
+                    {user ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowRoleDropdown(false);
+                            onOpenProfile();
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700 flex items-center gap-2 cursor-pointer"
+                        >
+                          <User className="w-3.5 h-3.5 text-gray-400" />
+                          <span>My Profile & Addresses</span>
+                        </button>
+                        <button
+                          id="nav-sign-out-btn"
+                          onClick={() => {
+                            logout();
+                            setShowRoleDropdown(false);
+                            onNavigateHome();
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-rose-50 text-gray-700 flex items-center gap-2 cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Sign out</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="px-3 py-2 text-[11px] text-gray-500 flex items-center gap-2">
+                        <LogIn className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Sign in to access your profile and orders</span>
+                      </div>
+                    )}
                   </div>
                 </>
               )}

@@ -10,6 +10,11 @@ export const setAuthToken = (token: string) => {
   localStorage.setItem('shopsathi_token', token);
 };
 
+export const clearAuthToken = () => {
+  currentAuthToken = '';
+  localStorage.removeItem('shopsathi_token');
+};
+
 export const getAuthToken = () => currentAuthToken;
 
 const getHeaders = () => ({
